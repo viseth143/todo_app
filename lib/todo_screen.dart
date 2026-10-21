@@ -1,4 +1,7 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:todo_app/widgets/todo_item_screen.dart';
 
 class TodoScreen extends StatefulWidget {
@@ -14,6 +17,23 @@ class _TodoScreenState extends State<TodoScreen> {
     {'id': 2, 'title': 'Build a todo app', 'done': false},
   ];
   final TextEditingController work = TextEditingController();
+
+  Future<void> saveTodos() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString("todos", jsonEncode(todos));
+  }
+
+  Future<void> loadTodos() async{
+    final prefs = await SharedPreferences.getInstance();
+    final saved = prefs.getString('todos');
+
+    if (saved == null) return;
+
+    final List decoded = jsonDecode(saved);
+    setState(() {
+      todos = decoded.map((e) => Map<String, dynamic>.from(e)).toList();
+    });
+  }
 
   void showTodoDialog({int? index}) {
     final isEditing = index != null;
@@ -49,6 +69,7 @@ class _TodoScreenState extends State<TodoScreen> {
                     });
                   }
                 });
+                saveTodos();
                 Navigator.pop(context);
               },
               child: Text(isEditing ? "Save" : "Add"),
@@ -57,6 +78,12 @@ class _TodoScreenState extends State<TodoScreen> {
         );
       },
     );
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    loadTodos();
   }
 
   @override
@@ -87,6 +114,7 @@ class _TodoScreenState extends State<TodoScreen> {
                       setState(() {
                         todos.removeAt(index);
                       });
+                      saveTodos();
                     },
                     // child: Card(
                     //   child: ListTile(
@@ -135,11 +163,15 @@ class _TodoScreenState extends State<TodoScreen> {
                         setState(() {
                           todos[index]['done'] = newValue;
                         });
+                        saveTodos();
                       },
                       onEdit: () => showTodoDialog(index: index),
-                      onDelete: () => setState(() {
-                        todos.removeAt(index);
-                      }),
+                      onDelete:() {
+                        setState(() {
+                          todos.removeAt(index);
+                        });
+                        saveTodos();
+                      },
                     ),
                   );
                 },
