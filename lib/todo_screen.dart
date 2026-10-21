@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:todo_app/widgets/todo_item.dart';
+import 'package:todo_app/widgets/todo_item_screen.dart';
 
 class TodoScreen extends StatefulWidget {
   const TodoScreen({super.key});
@@ -61,7 +61,6 @@ class _TodoScreenState extends State<TodoScreen> {
 
   @override
   void dispose() {
-    // TODO: implement dispose
     work.dispose();
     super.dispose();
   }
@@ -72,7 +71,7 @@ class _TodoScreenState extends State<TodoScreen> {
       appBar: AppBar(title: Text("My Todos")),
       body:
           todos.isEmpty
-              ? Center(child: Text("add todo"))
+              ? Center(child: Text("No Todos yet. Tap + to add to one"))
               : ListView.builder(
                 itemCount: todos.length,
                 itemBuilder: (context, index) {
