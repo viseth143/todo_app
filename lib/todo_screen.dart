@@ -5,7 +5,13 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:todo_app/widgets/todo_item_screen.dart';
 
 class TodoScreen extends StatefulWidget {
-  const TodoScreen({super.key});
+  final bool isDark;
+  final ValueChanged<bool> onThemeChanged;
+  const TodoScreen({
+    super.key,
+    required this.isDark,
+    required this.onThemeChanged,
+  });
 
   @override
   State<TodoScreen> createState() => _TodoScreenState();
@@ -23,7 +29,7 @@ class _TodoScreenState extends State<TodoScreen> {
     await prefs.setString("todos", jsonEncode(todos));
   }
 
-  Future<void> loadTodos() async{
+  Future<void> loadTodos() async {
     final prefs = await SharedPreferences.getInstance();
     final saved = prefs.getString('todos');
 
@@ -50,7 +56,7 @@ class _TodoScreenState extends State<TodoScreen> {
             decoration: InputDecoration(hintText: "Enter new todo"),
           ),
           actions: [
-            ElevatedButton(
+            TextButton(
               onPressed: () => Navigator.pop(context),
               child: Text("Cancel"),
             ),
@@ -95,7 +101,18 @@ class _TodoScreenState extends State<TodoScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text("My Todos")),
+      appBar: AppBar(
+        title: Text("My Todos"),
+        actions: [
+          Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: Switch(
+              value: widget.isDark,
+              onChanged: widget.onThemeChanged,
+            ),
+          ),
+        ],
+      ),
       body:
           todos.isEmpty
               ? Center(child: Text("No Todos yet. Tap + to add to one"))
@@ -116,46 +133,6 @@ class _TodoScreenState extends State<TodoScreen> {
                       });
                       saveTodos();
                     },
-                    // child: Card(
-                    //   child: ListTile(
-                    //     leading: Checkbox(
-                    //       value: todos[index]['done'],
-                    //       onChanged: (newValue) {
-                    //         setState(() {
-                    //           todos[index]['done'] = newValue;
-                    //         });
-                    //       },
-                    //     ),
-                    //     title: Text(
-                    //       todos[index]['title'],
-                    //       style: TextStyle(
-                    //         decoration:
-                    //             todos[index]['done']
-                    //                 ? TextDecoration.lineThrough
-                    //                 : TextDecoration.none,
-                    //       ),
-                    //     ),
-                    //     trailing: Row(
-                    //       mainAxisSize: MainAxisSize.min,
-                    //       children: [
-                    //         IconButton(
-                    //           onPressed: () {
-                    //             showTodoDialog(index: index);
-                    //           },
-                    //           icon: Icon(Icons.edit),
-                    //         ),
-                    //         IconButton(
-                    //           onPressed: () {
-                    //             setState(() {
-                    //               todos.removeAt(index);
-                    //             });
-                    //           },
-                    //           icon: Icon(Icons.delete),
-                    //         ),
-                    //       ],
-                    //     ),
-                    //   ),
-                    // ),
                     child: TodoItemScreen(
                       title: todos[index]['title'],
                       done: todos[index]['done'],
@@ -166,7 +143,7 @@ class _TodoScreenState extends State<TodoScreen> {
                         saveTodos();
                       },
                       onEdit: () => showTodoDialog(index: index),
-                      onDelete:() {
+                      onDelete: () {
                         setState(() {
                           todos.removeAt(index);
                         });
@@ -179,35 +156,6 @@ class _TodoScreenState extends State<TodoScreen> {
       floatingActionButton: FloatingActionButton(
         onPressed: () {
           showTodoDialog();
-          // showDialog(
-          //   context: context,
-          //   builder: (context) {
-          //     return AlertDialog(
-          //       title: Text("New Todo"),
-          //       content: TextField(
-          //         controller: work,
-          //         decoration: InputDecoration(hintText: "Enter your next todo"),
-          //       ),
-          //       actions: [
-          //         ElevatedButton(
-          //           onPressed: () => Navigator.pop(context),
-          //           child: Text("Cancel"),
-          //         ),
-          //         ElevatedButton(
-          //           onPressed: () {
-          //             if (work.text.trim().isEmpty) return;
-          //             setState(() {
-          //               todos.add({'title': work.text.trim(), 'done': false});
-          //             });
-          //             work.clear();
-          //             Navigator.pop(context);
-          //           },
-          //           child: Text("Add"),
-          //         ),
-          //       ],
-          //     );
-          //   },
-          // );
         },
         child: Icon(Icons.add),
       ),
