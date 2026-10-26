@@ -1,16 +1,25 @@
-# todo_app
+# Todo App
 
-A new Flutter project.
+A Flutter todo app with local storage and dark mode, built with the BLoC pattern.
 
-## Getting Started
+## Features
+- Add, edit, delete, and complete todos
+- Swipe to delete
+- Dark mode switch
+- Todos saved locally and restored after restart
 
-This project is a starting point for a Flutter application.
+## Tech
+- Flutter
+- flutter_bloc
+- equatable
+- shared_preferences
 
-A few resources to get you started if this is your first Flutter project:
+## Architecture
+- `models/`: the `Todo` model
+- `bloc/`: `TodoBloc`, events, and state
+- `widgets/`: reusable UI like the todo row
+- The screen only sends events and displays state
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
-
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+## How to run
+    flutter pub get
+    flutter run
