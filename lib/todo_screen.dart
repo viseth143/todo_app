@@ -1,7 +1,10 @@
-import 'dart:convert';
 
 import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:todo_app/bloc/todo_bloc.dart';
+import 'package:todo_app/bloc/todo_event.dart';
+import 'package:todo_app/bloc/todo_state.dart';
+import 'package:todo_app/models/todo.dart';
 import 'package:todo_app/widgets/todo_item_screen.dart';
 
 class TodoScreen extends StatefulWidget {
@@ -18,32 +21,11 @@ class TodoScreen extends StatefulWidget {
 }
 
 class _TodoScreenState extends State<TodoScreen> {
-  List<Map<String, dynamic>> todos = [
-    {'id': 1, 'title': 'Learn Flutter', 'done': false},
-    {'id': 2, 'title': 'Build a todo app', 'done': false},
-  ];
   final TextEditingController work = TextEditingController();
 
-  Future<void> saveTodos() async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString("todos", jsonEncode(todos));
-  }
-
-  Future<void> loadTodos() async {
-    final prefs = await SharedPreferences.getInstance();
-    final saved = prefs.getString('todos');
-
-    if (saved == null) return;
-
-    final List decoded = jsonDecode(saved);
-    setState(() {
-      todos = decoded.map((e) => Map<String, dynamic>.from(e)).toList();
-    });
-  }
-
-  void showTodoDialog({int? index}) {
-    final isEditing = index != null;
-    work.text = isEditing ? todos[index]['title'] : '';
+  void showTodoDialog({Todo? todo}) {
+    final isEditing = todo != null;
+    work.text = isEditing ? todo.title : '';
 
     showDialog(
       context: context,
@@ -64,18 +46,11 @@ class _TodoScreenState extends State<TodoScreen> {
               onPressed: () {
                 final text = work.text.trim();
                 if (text.isEmpty) return;
-                setState(() {
                   if (isEditing) {
-                    todos[index]['title'] = text;
+                    context.read<TodoBloc>().add(EditTodo(id: todo.id, title: text));
                   } else {
-                    todos.add({
-                      'id': DateTime.now().microsecondsSinceEpoch,
-                      'title': text,
-                      'done': false,
-                    });
+                    context.read<TodoBloc>().add(AddTodo(title: text));
                   }
-                });
-                saveTodos();
                 Navigator.pop(context);
               },
               child: Text(isEditing ? "Save" : "Add"),
@@ -86,17 +61,6 @@ class _TodoScreenState extends State<TodoScreen> {
     );
   }
 
-  @override
-  void initState() {
-    super.initState();
-    loadTodos();
-  }
-
-  @override
-  void dispose() {
-    work.dispose();
-    super.dispose();
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -113,46 +77,43 @@ class _TodoScreenState extends State<TodoScreen> {
           ),
         ],
       ),
-      body:
-          todos.isEmpty
-              ? Center(child: Text("No Todos yet. Tap + to add to one"))
-              : ListView.builder(
-                itemCount: todos.length,
-                itemBuilder: (context, index) {
-                  return Dismissible(
-                    key: ValueKey(todos[index]['id']),
-                    background: Container(
-                      color: Colors.red,
-                      alignment: Alignment.centerRight,
-                      padding: EdgeInsets.symmetric(horizontal: 16),
-                      child: Icon(Icons.delete, color: Colors.white),
-                    ),
-                    onDismissed: (direction) {
-                      setState(() {
-                        todos.removeAt(index);
-                      });
-                      saveTodos();
-                    },
-                    child: TodoItemScreen(
-                      title: todos[index]['title'],
-                      done: todos[index]['done'],
-                      onToggle: (newValue) {
-                        setState(() {
-                          todos[index]['done'] = newValue;
-                        });
-                        saveTodos();
-                      },
-                      onEdit: () => showTodoDialog(index: index),
-                      onDelete: () {
-                        setState(() {
-                          todos.removeAt(index);
-                        });
-                        saveTodos();
-                      },
-                    ),
-                  );
+      body: BlocBuilder<TodoBloc, TodoState>(
+        builder: (context, state) {
+          if (state.todos.isEmpty) {      return const Center(child: Text("No todos yet. Tap + to add one!"));
+    }
+          return ListView.builder(
+            itemCount: state.todos.length,
+            itemBuilder: (context, index) {
+              final todo = state.todos[index];
+              return Dismissible(
+                key: ValueKey(todo.id),
+                background: Container(
+                  color: Colors.red,
+                  alignment: Alignment.centerRight,
+                  padding: EdgeInsets.symmetric(horizontal: 16),
+                  child: Icon(Icons.delete, color: Colors.white),
+                ),
+                onDismissed: (direction) {
+                  context.read<TodoBloc>().add(DeleteTodo(id: todo.id));
                 },
-              ),
+                child: TodoItemScreen(
+                  title: todo.title,
+                  done: todo.done,
+                  onToggle: (newValue) {
+                    context.read<TodoBloc>().add(ToggleTodo(id: todo.id));
+                  },
+                  onEdit: () {
+                    showTodoDialog(todo: todo);
+                  },
+                  onDelete: () {
+                    context.read<TodoBloc>().add(DeleteTodo(id: todo.id));
+                  },
+                ),
+              );
+            },
+          );
+        },
+      ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
           showTodoDialog();
