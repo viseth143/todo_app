@@ -22,4 +22,4 @@ A Flutter todo app with local storage and dark mode, built with the BLoC pattern
 
 ## How to run
     flutter pub get
-    flutter run
+    flutter run![alt text](image.png)
